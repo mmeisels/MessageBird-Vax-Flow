@@ -1,0 +1,993 @@
+{
+  "id": "5eee7d4c-564d-4cbe-8729-7d9335dc1d21",
+  "revisionId": "6a3818c2-655d-4607-aead-d8a9f7213aa7",
+  "trigger": "onReceivedConversationMessage",
+  "title": "Vaccination Cert Flow",
+  "options": {
+    "callbacks": [],
+    "targets": [
+      "579ad3c8-b535-4aca-8ad4-c8f2cb3c8983"
+    ]
+  },
+  "metadata": {
+    "triggerIntent": "",
+    "oneInvocationPerConversation": true,
+    "databaseIDs": [
+      "key-values"
+    ]
+  },
+  "steps": [
+    {
+      "id": "f1f4258d-c5df-4c04-b456-1cc93d896415",
+      "action": "keyValueDBDelete",
+      "options": {
+        "databaseId": "key-values",
+        "key": "{{contact.phoneNumber}}",
+        "intent": "keyValueDBDelete"
+      }
+    },
+    {
+      "id": "563331d0-8c79-4603-b074-818ac75fdd0c",
+      "action": "keyValueDBGet",
+      "options": {
+        "databaseId": "key-values",
+        "key": "{{contact.phoneNumber}}",
+        "variables": {
+          "outputVariable": "json"
+        },
+        "decodeJSON": true,
+        "intent": "keyValueDBGet",
+        "cases": [
+          {
+            "conditions": [
+              {
+                "variable": "keyValueGetStatus",
+                "operator": "==",
+                "value": "success"
+              }
+            ],
+            "steps": [
+              {
+                "id": "66e6fbf1-fd6b-47b8-b620-e76594a7bb54",
+                "action": "sendConversationMessage",
+                "options": {
+                  "content": {
+                    "text": "Hi {{json.Name}}",
+                    "image": {},
+                    "audio": {},
+                    "video": {},
+                    "file": {},
+                    "location": {},
+                    "email": {
+                      "from": {},
+                      "content": {}
+                    },
+                    "quickReply": {}
+                  },
+                  "type": "text",
+                  "recipients": {
+                    "conversationIds": [
+                      "{{conversationId}}"
+                    ]
+                  },
+                  "intent": "replyConversationMessage",
+                  "highThroughput": false,
+                  "variables": {}
+                }
+              },
+              {
+                "id": "e0804a44-9212-440f-b8c5-9a59019f2dd4",
+                "action": "await",
+                "options": {
+                  "source": "",
+                  "target": "",
+                  "trigger": "awaitForDuration",
+                  "variables": {},
+                  "expiryAt": "2 seconds",
+                  "intent": "awaitForDuration"
+                }
+              },
+              {
+                "id": "a14a996e-b735-4691-95b3-0b767934f1c7",
+                "action": "switch",
+                "options": {
+                  "cases": [
+                    {
+                      "conditions": [
+                        {
+                          "variable": "{{json.CovidChecked}}",
+                          "operator": "==",
+                          "value": "YES",
+                          "options": {
+                            "intent": "custom"
+                          }
+                        }
+                      ],
+                      "steps": [
+                        {
+                          "id": "37820141-369c-41dd-86fd-29287bdecd6f",
+                          "action": "sendConversationMessage",
+                          "options": {
+                            "content": {
+                              "text": "Your covid cert has been checked.\n\nWhich day do you want to register for?",
+                              "image": {},
+                              "audio": {},
+                              "video": {},
+                              "file": {},
+                              "location": {},
+                              "email": {
+                                "from": {},
+                                "content": {}
+                              },
+                              "quickReply": {}
+                            },
+                            "type": "text",
+                            "recipients": {
+                              "conversationIds": [
+                                "{{conversationId}}"
+                              ]
+                            },
+                            "intent": "replyConversationMessage",
+                            "highThroughput": false,
+                            "variables": {}
+                          }
+                        },
+                        {
+                          "id": "af9dce56-8cd9-4afa-b12c-b49c491c5a0c",
+                          "action": "await",
+                          "options": {
+                            "source": "{{conversationId}}",
+                            "target": "",
+                            "trigger": "onReceivedConversationMessage",
+                            "variables": {
+                              "responseVar": "dateCheck"
+                            },
+                            "expiryAt": "3 minutes",
+                            "cases": [
+                              {
+                                "conditions": [
+                                  {
+                                    "variable": "{{awaitStatusVar}}",
+                                    "operator": "==",
+                                    "value": "replied"
+                                  }
+                                ],
+                                "steps": []
+                              }
+                            ],
+                            "intent": "awaitConversationMessage"
+                          }
+                        },
+                        {
+                          "id": "a460620c-9088-48b2-b6de-19baf84fbffb",
+                          "action": "recognizeEntity",
+                          "options": {
+                            "text": "{{dateCheck}}",
+                            "variableSet": {
+                              "extractedDate": "ENTITY_TYPE_TIME"
+                            },
+                            "timezone": "Australia/Sydney",
+                            "intent": "recognizeEntity"
+                          }
+                        },
+                        {
+                          "id": "90d2fceb-9710-4ea4-bd62-5629c82ec0a6",
+                          "action": "sheetsAddRow",
+                          "options": {
+                            "customerPlatformId": "1f1e62d9-f9eb-4137-a1ea-e681183b4e46",
+                            "sheetId": "1BKfITn0CJqUL8UFWHUFm4LYqtDUl96wpVvZYuP1VeG8",
+                            "worksheetId": 1213885271,
+                            "driveId": "MY_DRIVE",
+                            "values": [
+                              "{{json.Name}}",
+                              "{{contact.phoneNumber}}",
+                              "{{extractedDate.date}}"
+                            ],
+                            "intent": "sheetsAddRow"
+                          }
+                        },
+                        {
+                          "id": "f2576ade-669e-4092-bc1c-b090664bac8a",
+                          "action": "sendConversationMessage",
+                          "options": {
+                            "content": {
+                              "text": "Thanks. You have been registered for {{extractedDate.date}}",
+                              "image": {},
+                              "audio": {},
+                              "video": {},
+                              "file": {},
+                              "location": {},
+                              "email": {
+                                "from": {},
+                                "content": {}
+                              },
+                              "quickReply": {}
+                            },
+                            "type": "text",
+                            "recipients": {
+                              "conversationIds": [
+                                "{{conversationId}}"
+                              ]
+                            },
+                            "intent": "replyConversationMessage",
+                            "highThroughput": false,
+                            "variables": {}
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "defaultCase": {
+                    "steps": [
+                      {
+                        "id": "9c85fad3-2349-4014-a909-4816c2c9261b",
+                        "action": "sendConversationMessage",
+                        "options": {
+                          "content": {
+                            "text": "We need to get a copy of your certificate. ",
+                            "image": {},
+                            "audio": {},
+                            "video": {},
+                            "file": {},
+                            "location": {},
+                            "email": {
+                              "from": {},
+                              "content": {}
+                            },
+                            "quickReply": {}
+                          },
+                          "type": "text",
+                          "recipients": {
+                            "conversationIds": [
+                              "{{conversationId}}"
+                            ]
+                          },
+                          "intent": "replyConversationMessage",
+                          "highThroughput": false,
+                          "variables": {}
+                        }
+                      },
+                      {
+                        "id": "072fbf43-98c9-4197-8e39-88dd5ed746ef",
+                        "action": "jumpToStep",
+                        "options": {
+                          "stepId": "3d9c4072-ea1e-4f09-9ea6-af310ffb5551",
+                          "executionLimit": "10",
+                          "intent": "jumpToStep"
+                        }
+                      }
+                    ]
+                  },
+                  "intent": "smsConditional"
+                }
+              }
+            ]
+          },
+          {
+            "conditions": [
+              {
+                "variable": "keyValueGetStatus",
+                "operator": "==",
+                "value": "notFound"
+              }
+            ],
+            "steps": [
+              {
+                "id": "8d1cc83c-8f80-4c0f-b1d5-0b74734dd1ac",
+                "action": "superFillSlots",
+                "options": {
+                  "knowledgeBaseId": "Ng7Eu/AzTW+ezJFu0af1Og==",
+                  "expiryAtAwaitReply": "3 hours",
+                  "failedSlotFillingMaxRetries": "3",
+                  "variables": {
+                    "slotsVar": "form",
+                    "statusVar": "8d1cc83c-8f80-4c0f-b1d5-0b74734dd1ac"
+                  },
+                  "cases": [
+                    {
+                      "conditions": [
+                        {
+                          "variable": "{{8d1cc83c-8f80-4c0f-b1d5-0b74734dd1ac}}",
+                          "operator": "==",
+                          "value": "success"
+                        }
+                      ],
+                      "steps": [
+                        {
+                          "id": "3ead90da-1d34-4c2a-be18-4a6ed2eba6dd",
+                          "action": "sendConversationMessage",
+                          "options": {
+                            "content": {
+                              "text": "Please confirm these details are correct:\n\nName: {{form.fullName}}\nEmail: {{form.emailAddress}}\nPhone: {{form.phoneNumber}}\n\nAre they correct?",
+                              "image": {},
+                              "audio": {},
+                              "video": {},
+                              "file": {},
+                              "location": {},
+                              "email": {
+                                "from": {},
+                                "content": {}
+                              },
+                              "quickReply": {}
+                            },
+                            "type": "text",
+                            "recipients": {
+                              "conversationIds": [
+                                "{{conversationId}}"
+                              ]
+                            },
+                            "intent": "replyConversationMessage",
+                            "highThroughput": false,
+                            "variables": {}
+                          }
+                        },
+                        {
+                          "id": "10aa96dc-1db6-44d3-825f-1447d40555f0",
+                          "action": "await",
+                          "options": {
+                            "source": "{{conversationId}}",
+                            "target": "",
+                            "trigger": "onReceivedConversationMessage",
+                            "variables": {
+                              "responseVar": "response"
+                            },
+                            "expiryAt": "3 minutes",
+                            "cases": [
+                              {
+                                "conditions": [
+                                  {
+                                    "variable": "{{awaitStatusVar}}",
+                                    "operator": "==",
+                                    "value": "replied"
+                                  }
+                                ],
+                                "steps": []
+                              }
+                            ],
+                            "intent": "awaitConversationMessage"
+                          }
+                        },
+                        {
+                          "id": "291b1f73-39ef-46c5-994e-2ff07ea6051f",
+                          "action": "recognizeIntent",
+                          "options": {
+                            "text": "{{response}}",
+                            "datasetId": "kvaU319HQZeELEUyd2Y6sw==",
+                            "variables": {
+                              "intentVar": "intent"
+                            },
+                            "fallback": "No",
+                            "intent": "recognizeIntent"
+                          }
+                        },
+                        {
+                          "id": "6ba15175-dc73-4983-815d-7f35bc156bb0",
+                          "action": "switch",
+                          "options": {
+                            "cases": [
+                              {
+                                "conditions": [
+                                  {
+                                    "variable": "{{intent}}",
+                                    "operator": "==",
+                                    "value": "Yes",
+                                    "options": {
+                                      "intent": "custom"
+                                    }
+                                  }
+                                ],
+                                "steps": [
+                                  {
+                                    "id": "3d9c4072-ea1e-4f09-9ea6-af310ffb5551",
+                                    "action": "sendConversationMessage",
+                                    "options": {
+                                      "content": {
+                                        "text": "Please can you send us a copy of your vaccination certificate?",
+                                        "image": {},
+                                        "audio": {},
+                                        "video": {},
+                                        "file": {},
+                                        "location": {},
+                                        "email": {
+                                          "from": {},
+                                          "content": {}
+                                        },
+                                        "quickReply": {}
+                                      },
+                                      "type": "text",
+                                      "recipients": {
+                                        "conversationIds": [
+                                          "{{conversationId}}"
+                                        ]
+                                      },
+                                      "intent": "replyConversationMessage",
+                                      "highThroughput": false,
+                                      "variables": {}
+                                    }
+                                  },
+                                  {
+                                    "id": "fdec992e-84d9-414f-8c6b-51caa38170b9",
+                                    "action": "await",
+                                    "options": {
+                                      "source": "{{conversationId}}",
+                                      "target": "",
+                                      "trigger": "onReceivedConversationMessage",
+                                      "variables": {
+                                        "responseVar": "vaxCert"
+                                      },
+                                      "expiryAt": "3 minutes",
+                                      "cases": [
+                                        {
+                                          "conditions": [
+                                            {
+                                              "variable": "{{awaitStatusVar}}",
+                                              "operator": "==",
+                                              "value": "replied"
+                                            }
+                                          ],
+                                          "steps": []
+                                        }
+                                      ],
+                                      "intent": "awaitConversationMessage"
+                                    }
+                                  },
+                                  {
+                                    "id": "53e7f35c-8868-4ae5-8ae9-bb96305c74c2",
+                                    "action": "switch",
+                                    "options": {
+                                      "cases": [
+                                        {
+                                          "conditions": [
+                                            {
+                                              "variable": "{{messageImage}}",
+                                              "operator": "isEmptyOrNotSet",
+                                              "value": "",
+                                              "options": {
+                                                "intent": "custom"
+                                              }
+                                            }
+                                          ],
+                                          "steps": [
+                                            {
+                                              "id": "8231bf34-83f9-4374-b509-e56a5e2de244",
+                                              "action": "sendConversationMessage",
+                                              "options": {
+                                                "content": {
+                                                  "text": "Sorry, this was not what we were looking for.\n\nPlease try again.",
+                                                  "image": {},
+                                                  "audio": {},
+                                                  "video": {},
+                                                  "file": {},
+                                                  "location": {},
+                                                  "email": {
+                                                    "from": {},
+                                                    "content": {}
+                                                  },
+                                                  "quickReply": {}
+                                                },
+                                                "type": "text",
+                                                "recipients": {
+                                                  "conversationIds": [
+                                                    "{{conversationId}}"
+                                                  ]
+                                                },
+                                                "intent": "replyConversationMessage",
+                                                "highThroughput": false,
+                                                "variables": {}
+                                              }
+                                            },
+                                            {
+                                              "id": "828c3167-c845-4d92-b36a-8d5cf6e60a45",
+                                              "action": "jumpToStep",
+                                              "options": {
+                                                "stepId": "3d9c4072-ea1e-4f09-9ea6-af310ffb5551",
+                                                "executionLimit": "10",
+                                                "intent": "jumpToStep"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "defaultCase": {
+                                        "steps": [
+                                          {
+                                            "id": "b4e707bb-8be5-4a55-9283-a1180e9c5c4b",
+                                            "action": "readOpticalCode",
+                                            "options": {
+                                              "imageURL": "{{messageImage}}",
+                                              "opticalCodeType": "Document",
+                                              "variables": {
+                                                "readOpticalCodeVar": "image_content",
+                                                "analyzeImageStatusVar": "b4e707bb-8be5-4a55-9283-a1180e9c5c4b"
+                                              },
+                                              "documentType": "Invoice",
+                                              "cases": [
+                                                {
+                                                  "conditions": [
+                                                    {
+                                                      "variable": "{{b4e707bb-8be5-4a55-9283-a1180e9c5c4b}}",
+                                                      "operator": "==",
+                                                      "value": "success"
+                                                    }
+                                                  ],
+                                                  "steps": [
+                                                    {
+                                                      "id": "5bcd6a8a-54c9-4c36-8328-c25d9fc93724",
+                                                      "action": "switch",
+                                                      "options": {
+                                                        "cases": [
+                                                          {
+                                                            "conditions": [
+                                                              {
+                                                                "variable": "{{image_content}}",
+                                                                "operator": "isEmptyOrNotSet",
+                                                                "value": "",
+                                                                "options": {
+                                                                  "intent": "custom"
+                                                                }
+                                                              }
+                                                            ],
+                                                            "steps": [
+                                                              {
+                                                                "id": "df3182ec-394f-4270-b371-59b29153b2b1",
+                                                                "action": "sendConversationMessage",
+                                                                "options": {
+                                                                  "content": {
+                                                                    "text": "I am sorry we could not detect the image details. Please send a clearer image.",
+                                                                    "image": {},
+                                                                    "audio": {},
+                                                                    "video": {},
+                                                                    "file": {},
+                                                                    "location": {},
+                                                                    "email": {
+                                                                      "from": {},
+                                                                      "content": {}
+                                                                    },
+                                                                    "quickReply": {}
+                                                                  },
+                                                                  "type": "text",
+                                                                  "recipients": {
+                                                                    "conversationIds": [
+                                                                      "{{conversationId}}"
+                                                                    ]
+                                                                  },
+                                                                  "intent": "replyConversationMessage",
+                                                                  "highThroughput": false,
+                                                                  "variables": {}
+                                                                }
+                                                              },
+                                                              {
+                                                                "id": "796c5b9f-4e4a-415b-9cb4-b0ef2436e7ec",
+                                                                "action": "jumpToStep",
+                                                                "options": {
+                                                                  "stepId": "3d9c4072-ea1e-4f09-9ea6-af310ffb5551",
+                                                                  "executionLimit": "10",
+                                                                  "intent": "jumpToStep"
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "defaultCase": {
+                                                          "steps": [
+                                                            {
+                                                              "id": "e35247a7-f0ca-49df-acaa-cb684f60ab00",
+                                                              "action": "switch",
+                                                              "options": {
+                                                                "cases": [
+                                                                  {
+                                                                    "conditions": [
+                                                                      {
+                                                                        "variable": "image_content.supplier_address",
+                                                                        "operator": "contains",
+                                                                        "value": "Australian Government",
+                                                                        "options": {
+                                                                          "intent": "custom"
+                                                                        }
+                                                                      }
+                                                                    ],
+                                                                    "steps": [
+                                                                      {
+                                                                        "id": "b67aa88a-9826-49af-af0c-05f572a1946b",
+                                                                        "action": "switch",
+                                                                        "options": {
+                                                                          "cases": [
+                                                                            {
+                                                                              "conditions": [
+                                                                                {
+                                                                                  "variable": "{{image_content.purchase_order}}",
+                                                                                  "operator": "==",
+                                                                                  "value": "COVID-19",
+                                                                                  "options": {
+                                                                                    "intent": "custom"
+                                                                                  }
+                                                                                }
+                                                                              ],
+                                                                              "steps": [
+                                                                                {
+                                                                                  "id": "215c4188-abe4-4152-bf20-9d6fa0ef0bd9",
+                                                                                  "action": "updateInboxContact",
+                                                                                  "options": {
+                                                                                    "contactId": "{{conversationContactId}}",
+                                                                                    "displayName": "{{form.fullName}}",
+                                                                                    "firstName": "",
+                                                                                    "lastName": "",
+                                                                                    "email": "{{form.emailAddress}}",
+                                                                                    "phone": "",
+                                                                                    "languages": "",
+                                                                                    "timezone": "",
+                                                                                    "country": "",
+                                                                                    "avatar": "",
+                                                                                    "gender": "",
+                                                                                    "attributes": {
+                                                                                      "Covid Cert Check": "Checked. {{currentTime}}",
+                                                                                      "Covid Cert Document Number": "{{image_content.invoice_id}}",
+                                                                                      "Covid Cert Issuer": "{{image_content.supplier_address}}"
+                                                                                    },
+                                                                                    "intent": "updateInboxContact"
+                                                                                  }
+                                                                                },
+                                                                                {
+                                                                                  "id": "b009bca5-d32a-4a62-b029-0e756ef3cd4b",
+                                                                                  "action": "keyValueDBDelete",
+                                                                                  "options": {
+                                                                                    "databaseId": "key-values",
+                                                                                    "key": "{{contact.phoneNumber}}",
+                                                                                    "intent": "keyValueDBDelete"
+                                                                                  }
+                                                                                },
+                                                                                {
+                                                                                  "id": "9cd03ab6-2577-440b-9bd7-f93ce0d279eb",
+                                                                                  "action": "keyValueDBSet",
+                                                                                  "options": {
+                                                                                    "databaseId": "key-values",
+                                                                                    "key": "{{contact.phoneNumber}}",
+                                                                                    "value": "{\n\"Name\":\"{{form.fullName}}\",\n\"Email\":\"{{form.emailAddress}}\",\n\"PhoneNumber\":\"{{form.phoneNumber}}\",\n\"CovidCheckDoc\":\"{{image_content.invoice_id}}\",\n\"CovidIssuer\":\"{{image_content.supplier_address}}\",\n\"CovidChecked\":\"YES\",\n\"Member\":\"{{form.Member}}\"\n}",
+                                                                                    "intent": "keyValueDBSet"
+                                                                                  }
+                                                                                },
+                                                                                {
+                                                                                  "id": "c665bf4f-aa85-4fb1-9daa-cc3860e4026e",
+                                                                                  "action": "sheetsAddRow",
+                                                                                  "options": {
+                                                                                    "customerPlatformId": "1f1e62d9-f9eb-4137-a1ea-e681183b4e46",
+                                                                                    "sheetId": "1BKfITn0CJqUL8UFWHUFm4LYqtDUl96wpVvZYuP1VeG8",
+                                                                                    "worksheetId": 0,
+                                                                                    "driveId": "MY_DRIVE",
+                                                                                    "values": [
+                                                                                      "{{form.fullName}}",
+                                                                                      "{{form.phoneNumber}}",
+                                                                                      "{{form.emailAddress}}",
+                                                                                      "{{form.Member}}",
+                                                                                      "YES",
+                                                                                      "{{image_content.invoice_id}}",
+                                                                                      "{{image_content.supplier_address}}",
+                                                                                      "{{messageImage}}"
+                                                                                    ],
+                                                                                    "intent": "sheetsAddRow"
+                                                                                  }
+                                                                                },
+                                                                                {
+                                                                                  "id": "8dd22b07-e89b-4884-95ad-11e7d4ca8efc",
+                                                                                  "action": "sendConversationMessage",
+                                                                                  "options": {
+                                                                                    "content": {
+                                                                                      "text": "Thank you. Your cert has been registered.",
+                                                                                      "image": {},
+                                                                                      "audio": {},
+                                                                                      "video": {},
+                                                                                      "file": {},
+                                                                                      "location": {},
+                                                                                      "email": {
+                                                                                        "from": {},
+                                                                                        "content": {}
+                                                                                      },
+                                                                                      "quickReply": {}
+                                                                                    },
+                                                                                    "type": "text",
+                                                                                    "recipients": {
+                                                                                      "conversationIds": [
+                                                                                        "{{conversationId}}"
+                                                                                      ]
+                                                                                    },
+                                                                                    "intent": "replyConversationMessage",
+                                                                                    "highThroughput": false,
+                                                                                    "variables": {}
+                                                                                  }
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ],
+                                                                          "defaultCase": {
+                                                                            "steps": [
+                                                                              {
+                                                                                "id": "5fbe2ce7-b46e-4acd-83a9-554a601deb07",
+                                                                                "action": "sendConversationMessage",
+                                                                                "options": {
+                                                                                  "content": {
+                                                                                    "text": "Sorry, we could not determine the Cert Status. Handing you off to someone.",
+                                                                                    "image": {},
+                                                                                    "audio": {},
+                                                                                    "video": {},
+                                                                                    "file": {},
+                                                                                    "location": {},
+                                                                                    "email": {
+                                                                                      "from": {},
+                                                                                      "content": {}
+                                                                                    },
+                                                                                    "quickReply": {}
+                                                                                  },
+                                                                                  "type": "text",
+                                                                                  "recipients": {
+                                                                                    "conversationIds": [
+                                                                                      "{{conversationId}}"
+                                                                                    ]
+                                                                                  },
+                                                                                  "intent": "replyConversationMessage",
+                                                                                  "highThroughput": false,
+                                                                                  "variables": {}
+                                                                                }
+                                                                              },
+                                                                              {
+                                                                                "id": "87c45a4f-768b-4840-b7cd-e7ad50362315",
+                                                                                "action": "contactCenterCreateTicket",
+                                                                                "options": {
+                                                                                  "conversationId": "{{conversationId}}",
+                                                                                  "contactId": "",
+                                                                                  "callbackURL": "",
+                                                                                  "attributes": {
+                                                                                    "language": [],
+                                                                                    "tag": []
+                                                                                  },
+                                                                                  "type": "conversation",
+                                                                                  "waitMedia": "",
+                                                                                  "ticketEvents": [],
+                                                                                  "intent": "contactCenterCreateTicket"
+                                                                                }
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "intent": "smsConditional"
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ],
+                                                                "defaultCase": {
+                                                                  "steps": [
+                                                                    {
+                                                                      "id": "1baa1ecc-5254-4745-aa6f-f73878e1656b",
+                                                                      "action": "sendConversationMessage",
+                                                                      "options": {
+                                                                        "content": {
+                                                                          "text": "Sorry this is not a Covid Cert",
+                                                                          "image": {},
+                                                                          "audio": {},
+                                                                          "video": {},
+                                                                          "file": {},
+                                                                          "location": {},
+                                                                          "email": {
+                                                                            "from": {},
+                                                                            "content": {}
+                                                                          },
+                                                                          "quickReply": {}
+                                                                        },
+                                                                        "type": "text",
+                                                                        "recipients": {
+                                                                          "conversationIds": [
+                                                                            "{{conversationId}}"
+                                                                          ]
+                                                                        },
+                                                                        "intent": "replyConversationMessage",
+                                                                        "label": "Not Covid Cert Message",
+                                                                        "highThroughput": false,
+                                                                        "variables": {}
+                                                                      }
+                                                                    },
+                                                                    {
+                                                                      "id": "eac69bf1-8bab-4848-b1a4-5dc7212766d2",
+                                                                      "action": "jumpToStep",
+                                                                      "options": {
+                                                                        "stepId": "3d9c4072-ea1e-4f09-9ea6-af310ffb5551",
+                                                                        "executionLimit": "10",
+                                                                        "intent": "jumpToStep"
+                                                                      }
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "intent": "smsConditional",
+                                                                "label": "Check if Covid Cert"
+                                                              }
+                                                            }
+                                                          ]
+                                                        },
+                                                        "intent": "smsConditional"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "conditions": [
+                                                    {
+                                                      "variable": "{{b4e707bb-8be5-4a55-9283-a1180e9c5c4b}}",
+                                                      "operator": "matchesRegex",
+                                                      "value": "noneDetected|barcodeNotSupported|barcodeNotSelected|rateQuotumExceeded"
+                                                    }
+                                                  ],
+                                                  "steps": [
+                                                    {
+                                                      "id": "57760fc6-8855-44df-9942-8060616a10bd",
+                                                      "action": "sendConversationMessage",
+                                                      "options": {
+                                                        "content": {
+                                                          "text": "Error: Unrecognised. ",
+                                                          "image": {},
+                                                          "audio": {},
+                                                          "video": {},
+                                                          "file": {},
+                                                          "location": {},
+                                                          "email": {
+                                                            "from": {},
+                                                            "content": {}
+                                                          },
+                                                          "quickReply": {}
+                                                        },
+                                                        "type": "text",
+                                                        "recipients": {
+                                                          "conversationIds": [
+                                                            "{{conversationId}}"
+                                                          ]
+                                                        },
+                                                        "intent": "replyConversationMessage",
+                                                        "highThroughput": false,
+                                                        "variables": {}
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "conditions": [
+                                                    {
+                                                      "variable": "{{b4e707bb-8be5-4a55-9283-a1180e9c5c4b}}",
+                                                      "operator": "matchesRegex",
+                                                      "value": "fileTooLarge|invalidImage|emptyImage|invalidUrl|imageNotFound|unknownIssue"
+                                                    }
+                                                  ],
+                                                  "steps": [
+                                                    {
+                                                      "id": "8900e503-c115-4200-9fa5-3c4ff3754090",
+                                                      "action": "sendConversationMessage",
+                                                      "options": {
+                                                        "content": {
+                                                          "text": "Error ",
+                                                          "image": {},
+                                                          "audio": {},
+                                                          "video": {},
+                                                          "file": {},
+                                                          "location": {},
+                                                          "email": {
+                                                            "from": {},
+                                                            "content": {}
+                                                          },
+                                                          "quickReply": {}
+                                                        },
+                                                        "type": "text",
+                                                        "recipients": {
+                                                          "conversationIds": [
+                                                            "{{conversationId}}"
+                                                          ]
+                                                        },
+                                                        "intent": "replyConversationMessage",
+                                                        "highThroughput": false,
+                                                        "variables": {}
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "intent": "readOpticalCode",
+                                              "label": "Is This an Image"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "intent": "smsConditional"
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "defaultCase": {
+                              "steps": [
+                                {
+                                  "id": "86e8edf3-69ac-48ee-95df-8ab88a32cf9b",
+                                  "action": "jumpToStep",
+                                  "options": {
+                                    "stepId": "8d1cc83c-8f80-4c0f-b1d5-0b74734dd1ac",
+                                    "executionLimit": "10",
+                                    "intent": "jumpToStep"
+                                  }
+                                }
+                              ]
+                            },
+                            "intent": "smsConditional"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "variable": "{{8d1cc83c-8f80-4c0f-b1d5-0b74734dd1ac}}",
+                          "operator": "==",
+                          "value": "failed"
+                        }
+                      ],
+                      "steps": []
+                    }
+                  ],
+                  "intent": "superFillSlots"
+                }
+              }
+            ]
+          },
+          {
+            "conditions": [
+              {
+                "variable": "keyValueGetStatus",
+                "operator": "==",
+                "value": "jsonError"
+              }
+            ],
+            "steps": [
+              {
+                "id": "af70f305-518a-43d6-a4bc-bbe7c6cfc207",
+                "action": "keyValueDBDelete",
+                "options": {
+                  "databaseId": "key-values",
+                  "key": "{{contact.phoneNumber}}",
+                  "intent": "keyValueDBDelete"
+                }
+              },
+              {
+                "id": "70ee9d4d-13f1-429c-967b-c9090d9aa85d",
+                "action": "sendConversationMessage",
+                "options": {
+                  "content": {
+                    "text": "There was an error. Please try again. We have corrected this behind the scenes.",
+                    "image": {},
+                    "audio": {},
+                    "video": {},
+                    "file": {},
+                    "location": {},
+                    "email": {
+                      "from": {},
+                      "content": {}
+                    },
+                    "quickReply": {}
+                  },
+                  "type": "text",
+                  "recipients": {
+                    "conversationIds": [
+                      "{{conversationId}}"
+                    ]
+                  },
+                  "intent": "replyConversationMessage",
+                  "highThroughput": false,
+                  "variables": {}
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "published": true,
+  "createdAt": "2021-10-10T05:50:27.325982548Z",
+  "updatedAt": "2022-02-24T14:03:18.361089Z",
+  "revisionCount": 44,
+  "tags": [
+    "steps-edited"
+  ]
+}
